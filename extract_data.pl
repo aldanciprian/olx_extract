@@ -1,8 +1,35 @@
 #!/usr/bin/perl
 
 use List::MoreUtils qw(uniq);
+use DBI;
 
-my $first_url = "https://www.olx.ro/imobiliare/apartamente-garsoniere-de-vanzare/2-camere/timisoara/?search%5Bfilter_float_price%3Afrom%5D=50000&search%5Bfilter_float_price%3Ato%5D=70000&search%5Bprivate_business%5D=private";
+my $host="localhost";
+my $user="ciprian";
+my $pw="";
+
+my $table="olx";
+my %col = (
+						"link" => "VARCHAR(255) UNIQUE",
+						"misc" => "VARCHAR(3000)",
+				) ;
+				
+$dbh = DBI->connect("DBI:mysql:database=imobiliare;host=$host;port=$port", $user, $pw);
+
+my $sql="";
+$sql .= "CREATE TABLE IF NOT EXISTS $table (";
+foreach (sort(keys(%col)))
+{
+	$sql .= "$_ $col{$_}";
+	$sql .=",";
+}
+chop($sql);
+$sql .=")";
+
+print $sql."\n";
+$dbh->do($sql);
+
+
+my $first_url = "https://www.olx.ro/imobiliare/apartamente-garsoniere-de-vanzare/2-camere/timisoara/?search%5Bfilter_float_price%3Afrom%5D=50000&search%5Bfilter_float_price%3Ato%5D=70000&search%5Bfilter_float_m%3Afrom%5D=50&search%5Bprivate_business%5D=private";
 my @output = `lynx -dump "$first_url"`;
 my $next_url="";
 
@@ -53,6 +80,8 @@ foreach (@uniq_oferta_arrays)
 	print "getting $apt \n";
 	@output=`lynx -dump $apt`;	
 	my $start = 0;	
+	my @content;
+
 	foreach (@output)
 	{
 		chomp($_);
@@ -60,6 +89,9 @@ foreach (@uniq_oferta_arrays)
 		if ( $start == 1 )
 		{
 			print $_."\n";
+			push @content, $_;
+			
+			
 			if ( $_ =~ /.*Urmatorul anunt.*/ )
 			{
 #				print $_."\n";
@@ -77,5 +109,19 @@ foreach (@uniq_oferta_arrays)
 			}
 		}
 	}
+	my $misc =  join('\n' , @content);
+ 	$sql = "INSERT INTO $table (";
+	foreach (sort(keys(%col)))
+	{
+		$sql .= "$_";
+		$sql .= ",";
+	}
+	chop ($sql);
+	$sql .= ")	VALUES ('$apt', '$misc')";
+	print $sql."\n";
+	$dbh->do($sql);
 }
+
+$dbh->disconnect;
+
 
