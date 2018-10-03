@@ -3,6 +3,7 @@
 use List::MoreUtils qw(uniq);
 use DBI;
 
+
 my $host="localhost";
 my $user="ciprian";
 my $pw="";
@@ -28,8 +29,16 @@ $sql .=")";
 print $sql."\n";
 $dbh->do($sql);
 
+my $first_url = "";
 
-my $first_url = "https://www.olx.ro/imobiliare/apartamente-garsoniere-de-vanzare/2-camere/timisoara/?search%5Bfilter_float_price%3Afrom%5D=50000&search%5Bfilter_float_price%3Ato%5D=70000&search%5Bfilter_float_m%3Afrom%5D=50&search%5Bprivate_business%5D=private";
+if ( defined $ARGV[0] )
+{
+	$first_url = $ARGV[0];
+}
+else
+{
+	$first_url = "https://www.olx.ro/imobiliare/apartamente-garsoniere-de-vanzare/2-camere/timisoara/?search%5Bfilter_float_price%3Afrom%5D=50000&search%5Bfilter_float_price%3Ato%5D=70000&search%5Bfilter_float_m%3Afrom%5D=50&search%5Bprivate_business%5D=private";
+}
 my @output = `lynx -dump "$first_url"`;
 my $next_url="";
 
